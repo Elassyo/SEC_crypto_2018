@@ -51,38 +51,45 @@ def main(args):
     if a != b:
         die('failed to get session cookie\n' + str(COOKIES))
 
-    # check the blocksize
+    # find prefix and required prefix padding length
+    b = encrypt(bytes(46))
+    len_p = -1
+    for i in range(0, len(b) - 16, 16):
+        if i >= len(a) or a[i:i+16] != b[i:i+16] and b[i:i+16] == b[i+16:i+32]:
+            len_p = i
+            break
+    if len_p == -1:
+        die('failed to find prefix length: invalid blocksize or cipher mode')
+    for i in range(16, -1, -1):
+        if encrypt(bytes(15 + i))[len_p:len_p+16] != b[len_p:len_p+16]:
+            len_pp = i
+            break
+
+    # find full padding length
+    a = encrypt(bytes(len_pp))
+    b = a
     i = 0
     while len(a) == len(b):
         i += 1
-        b = encrypt(bytes(i))
+        b = encrypt(bytes(len_pp + i))
     c = b
     j = i
     while len(b) == len(c):
         j += 1
-        c = encrypt(bytes(j))
-    if j - i != 16:
-        die('invalid blocksize')
+        c = encrypt(bytes(len_pp + j))
 
-    # check that the cipher mode is ECB
-    #b = encrypt(bytes(32))
-    #if b[0:16] != b[16:32]:
-    #    die('invalid cipher mode')
-
-    # full length (secret + padding) and secret length
+    # full, full padding and secret length
     len_f = len(a)
-    len_s = len_f - i
-    print(len_f, len_s)
-    return
+    len_fp = i
+    len_s = len_f - len_p
 
     def decrypt(i, secret):
         #print(i, secret)
-        if i == len_s:
-            p = len_f - len_s
-            if encrypt(secret + bytes(p for i in range(p)))[:len_f] == a:
+        if i == len_s - len_fp:
+            if encrypt(bytes(len_pp) + secret + bytes(len_fp for i in range(len_fp)))[:len_f] == a:
                 return secret
             return
-        base = bytes(len_f - i - 1)
+        base = bytes(len_pp + len_s - i - 1)
         unknown = encrypt(base)[len_f - 1]
         for j in range(256):
             c = bytes([j])

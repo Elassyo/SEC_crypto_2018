@@ -77,9 +77,8 @@ def challenge12():
         session['ch12'] = {
             'key': Random.new().read(16),
             'prefix': Random.new().read(random.randint(0, 128)),
-            'secret': b'hello there'
+            'secret': b'general kenobi'
         }
-        print('NEW session: len_p=%d' % len(session['ch12']['prefix']))
 
     key = session['ch12']['key']
     prefix = session['ch12']['prefix']
