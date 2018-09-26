@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import base64
+import re
 import sys
 from Crypto.Cipher import AES
 
@@ -15,7 +16,7 @@ def main(args):
         die('invalid number of arguments')
     try:
         with open(args[1], 'r') as f:
-            key = bytes.fromhex(f.readline())
+            key = bytes.fromhex(re.sub(r'\s', '', f.readline()))
             data = base64.b64decode(''.join(f.readlines()))
             if len(key) == 0 or len(data) == 0:
                 raise ValueError()
@@ -29,7 +30,7 @@ def main(args):
     except ValueError:
         die('invalid key or ciphertext')
 
-    print(clear[:-clear[-1]].decode(), end='')
+    print(base64.b64encode(clear[:-clear[-1]]).decode())
 
 
 if __name__ == '__main__':

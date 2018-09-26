@@ -13,6 +13,7 @@ def die(msg, name=sys.argv[0]):
     print('%s:' % name, msg, file=sys.stderr)
     sys.exit(84)
 
+
 def request(url, data):
     req = urllib.request.Request('http://127.0.0.1:5000/challenge11/' + url,
         method='POST', data=data,

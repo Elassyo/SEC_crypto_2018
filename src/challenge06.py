@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import re
 import sys
 
 
@@ -46,7 +47,7 @@ def main(args):
         die('invalid number of arguments')
     try:
         with open(args[1], 'r') as f:
-            data = bytes.fromhex(f.read())
+            data = bytes.fromhex(re.sub(r'\s', '', f.read()))
             if len(data) == 0:
                 raise ValueError()
     except IOError as e:
@@ -55,8 +56,8 @@ def main(args):
         die('invalid data in file', name=args[1])
 
     res = set()
-    for ssz in range(2, 10):
-        for keysize in sorted(range(1, min(40, len(data) // ssz)), key=lambda sz: sum(0 if all((s[0] & 1 << i) == (v & 1 << i) for v in s) else 1 for s in zip(*[data[i:i+sz] for i in range(0, ssz * sz, sz)]) for i in range(8)) / sz)[:3]:
+    for ssz in range(2, 9):
+        for keysize in sorted(range(1, min(41, len(data) // ssz)), key=lambda sz: sum(0 if all((s[0] & 1 << i) == (v & 1 << i) for v in s) else 1 for s in zip(*[data[i:i+sz] for i in range(0, ssz * sz, sz)]) for i in range(8)) / sz)[:3]:
             res.add(bytes(max(range(256), key=lambda k: sum(ETAOIN[b] for b in map(lambda b: chr(b^k), (data[j] for j in range(i, len(data), keysize))) if b in ETAOIN)) for i in range(keysize)))
     key = max(res, key=lambda k: sum(ETAOIN[b] for b in map(lambda i: chr(data[i] ^ k[i % len(k)]), range(len(data))) if b in ETAOIN))
 

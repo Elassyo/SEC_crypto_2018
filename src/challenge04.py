@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import re
 import sys
 
 
@@ -46,7 +47,7 @@ def main(args):
         die('invalid number of arguments')
     try:
         with open(args[1], 'r') as f:
-            data = [bytes.fromhex(line) for line in f]
+            data = [bytes.fromhex(re.sub(r'\s', '', line)) for line in f]
             if len(data) == 0:
                 raise ValueError()
     except IOError as e:

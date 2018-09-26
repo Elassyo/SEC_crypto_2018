@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import base64
+import re
 import sys
 
 
@@ -14,7 +15,7 @@ def main(args):
         die('invalid number of arguments')
     try:
         with open(args[1], 'r') as f:
-            data = bytes.fromhex(f.read())
+            data = bytes.fromhex(re.sub(r'\s', '', f.read()))
             if len(data) == 0:
                 raise ValueError()
     except IOError as e:
