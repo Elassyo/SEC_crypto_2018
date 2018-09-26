@@ -15,7 +15,7 @@ def main(args):
         with open(args[1], 'r') as f:
             a = bytes.fromhex(f.readline())
             b = bytes.fromhex(f.readline())
-            if len(a) != len(b):
+            if len(a) == 0 or len(a) != len(b):
                 raise ValueError()
     except IOError as e:
         die('cannot open or read file: %s' % e.strerror, name=args[1])

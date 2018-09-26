@@ -16,6 +16,8 @@ def main(args):
     try:
         with open(args[1], 'r') as f:
             data = [base64.b64decode(line) for line in f]
+            if len(data) == 0:
+                raise ValueError()
             if any(len(d) % 16 != 0 for d in data):
                 raise ValueError()
     except IOError as e:

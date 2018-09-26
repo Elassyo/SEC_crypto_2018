@@ -18,6 +18,8 @@ def main(args):
             key = bytes.fromhex(f.readline())
             iv = bytes.fromhex(f.readline())
             data = base64.b64decode(f.read())
+            if len(key) == 0 or len (data) == 0:
+                raise ValueError()
             if len(iv) != 16 or len(data) % 16 != 0:
                 raise ValueError()
     except IOError as e:

@@ -15,6 +15,8 @@ def main(args):
     try:
         with open(args[1], 'r') as f:
             data = bytes.fromhex(f.read())
+            if len(data) == 0:
+                raise ValueError()
     except IOError as e:
         die('cannot open or read file: %s' % e.strerror, name=args[1])
     except ValueError:

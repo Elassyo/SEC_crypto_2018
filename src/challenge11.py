@@ -49,6 +49,9 @@ def main(args):
     b = new_profile(b'AAAAAAAAAA' + b'admin' + bytes(11 for i in range(11)))[16:32]
     # -> b'admin' (+ padding)
 
+    if len(a) == 0 or len(b) == 0:
+        die('invalid ciphertext')
+
     print(validate(a + b).decode())
 
 
