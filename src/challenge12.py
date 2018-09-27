@@ -51,6 +51,10 @@ def main(args):
     if a != b:
         die('failed to get session cookie\n' + str(COOKIES))
 
+    b = encrypt(bytes(1))
+    if a == b:
+        die('empty ciphertext')
+
     # find prefix and required prefix padding length
     b = encrypt(bytes(46))
     len_p = -1

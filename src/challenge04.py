@@ -48,7 +48,7 @@ def main(args):
     try:
         with open(args[1], 'r') as f:
             data = [bytes.fromhex(re.sub(r'\s', '', line)) for line in f]
-            if len(data) == 0:
+            if len(data) == 0 or any(len(d) == 0 for d in data):
                 raise ValueError()
     except IOError as e:
         die('cannot open or read file: %s' % e.strerror, name=args[1])

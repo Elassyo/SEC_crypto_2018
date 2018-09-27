@@ -45,13 +45,17 @@ def main(args):
     if len(args) != 1:
         die('invalid number of arguments')
 
+    test = new_profile(bytes(46))
+    if len(test) == 0 or len(test) % 16 != 0:
+        die('empty or invalid ciphertext')
+    test = [test[i:i+16] for i in range(0, len(test), 16)]
+    if max(test.count(t) for t in test) == 1:
+        die('invalid cipher mode')
+
     a = new_profile(b'AAAAAAAAAAAAA')[:32]
     # -> b'email=AAAAAAAAAAAAA&uid=10&role='
     b = new_profile(b'AAAAAAAAAA' + b'admin' + bytes(11 for i in range(11)))[16:32]
     # -> b'admin' (+ padding)
-
-    if len(a) == 0 or len(b) == 0:
-        die('invalid ciphertext')
 
     print(validate(a + b).decode())
 
