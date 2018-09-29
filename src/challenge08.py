@@ -25,11 +25,9 @@ def main(args):
     except ValueError:
         die('invalid data in file', name=args[1])
 
-    for line, d in enumerate(data):
-        blocks = [d[i:i+16] for i in range(0, len(data))]
-        if any(blocks.count(b) > 1 for b in blocks):
-            print(line + 1)
-            break
+    data = [[d[i:i+16] for i in range(0, len(data))] for d in data]
+    line = max(enumerate(data), key=lambda x: sum(x[1].count(b) for b in x[1]))[0]
+    print(line + 1)
 
 
 if __name__ == '__main__':
