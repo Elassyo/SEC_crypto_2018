@@ -28,6 +28,8 @@ def main(args):
     except ValueError:
         die('invalid data in file', name=args[1])
 
+    padding = 16 - (len(data) % 16)
+    data += bytes(padding for i in range(padding))
     blocks = [data[i:i+16] for i in range(0, len(data), 16)]
     try:
         aes = AES.new(key, AES.MODE_ECB)
