@@ -55,26 +55,19 @@ def main(args):
     except ValueError:
         die('invalid data in file', name=args[1])
 
-    res = set()
-    for ssz in range(2, 9):
-        for keysize in sorted(range(1, min(41, len(data) // ssz)), key=lambda sz: sum(0 if all((s[0] & 1 << i) == (v & 1 << i) for v in s) else 1 for s in zip(*[data[i:i+sz] for i in range(0, ssz * sz, sz)]) for i in range(8)) / sz)[:3]:
-            res.add(bytes(max(range(256), key=lambda k: sum(ETAOIN[b] for b in map(lambda b: chr(b^k), (data[j] for j in range(i, len(data), keysize))) if b in ETAOIN)) for i in range(keysize)))
-    key = max(res, key=lambda k: sum(ETAOIN[b] for b in map(lambda i: chr(data[i] ^ k[i % len(k)]), range(len(data))) if b in ETAOIN))
+    def avg(l):
+        return sum(l) / len(l)
 
-    try:
-        rep = 1
-        while rep <= len(data) / 2:
-            rep = key.index(key[0], rep)
-            if len(key) % rep == 0:
-                segments = [key[i:i+rep] for i in range(0, len(key), rep)]
-                skey = max(segments, key=lambda s: segments.count(s))
-                if segments.count(skey) / (len(key) / rep) > 0.5:
-                    key = skey
-                    break
-            rep += 1
-    except ValueError:
-        pass
+    def szip(l, step):
+        return zip(*(l[i::step] for i in range(step)))
 
+    keysizes = sorted(range(1, 41), key=lambda keysize: avg([sum(bin(a ^ b).count('1') for a, b in zip(a, b)) / keysize for a, b in szip([data[i:i+keysize] for i in range(0, len(data), keysize)], 2)]))[:5]
+    scores = []
+    for keysize in keysizes:
+        key = bytes(max(range(256), key=lambda k: sum(ETAOIN[b] for b in map(lambda b: chr(b^k), data[i::keysize]) if b in ETAOIN)) for i in range(keysize))
+        score = sum(ETAOIN[b] for b in map(lambda x: chr(x[1]^key[x[0] % len(key)]), enumerate(data)) if b in ETAOIN)
+        scores.append((key, score))
+    key = sorted(scores, key=lambda x: (x[1], 1 / len(x[0])))[-1][0]
     print(key.hex().upper())
 
 
