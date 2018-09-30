@@ -2,6 +2,7 @@
 
 import base64
 import random
+import re
 import urllib.parse
 from flask import Flask, request, session
 from Crypto import Random
@@ -44,7 +45,7 @@ def challenge11_new_profile():
 
     key = session['ch11']['key']
 
-    data = data.replace(b'&', b'').replace(b'=', b'')
+    data = re.sub(br'[&=]', b'', data)
     cleartext = b'email=' + data + b'&uid=10&role=user'
     padding = 16 - (len(cleartext) % 16)
     cleartext += bytes(padding for i in range(padding))
@@ -91,6 +92,50 @@ def challenge12():
     ciphertext = AES.new(key, AES.MODE_ECB).encrypt(cleartext)
 
     return base64.b64encode(ciphertext)
+
+
+@app.route('/challenge13/encrypt', methods=['POST'])
+def challenge13():
+    data = base64.b64decode(request.get_data())
+
+    if 'ch13' not in session:
+        session['ch13'] = {
+            'prefix': base64.b64encode(Random.new().read(96))[:random.randint(0, 128)],
+            'iv': Random.new().read(16),
+            'key': Random.new().read(16)
+        }
+
+    prefix = session['ch13']['prefix']
+    iv = session['ch13']['iv']
+    key = session['ch13']['key']
+
+    data = re.sub(br'[;=]', b'', data)
+    cleartext = b'title=' + prefix + b';content=' + data + b';type=jibberjabber;'
+    len_p = len(b'title=' + prefix + b';content=')
+    print(len_p, 16 - len_p % 16)
+    padding = 16 - (len(cleartext) % 16)
+    cleartext += bytes(padding for i in range(padding))
+
+    ciphertext = AES.new(key, AES.MODE_CBC, iv).encrypt(cleartext)
+
+    return base64.b64encode(ciphertext)
+
+
+@app.route('/challenge13/decrypt', methods=['POST'])
+def challenge13_validate():
+    data = base64.b64decode(request.get_data())
+
+    if 'ch13' not in session:
+        return 'KO'
+
+    iv = session['ch13']['iv']
+    key = session['ch13']['key']
+
+    cleartext = AES.new(key, AES.MODE_CBC, iv).decrypt(data)
+    cleartext = cleartext[:-cleartext[-1]]
+    print(cleartext)
+
+    return b'OK' if b'admin=true' in cleartext.split(b';') else b'KO'
 
 
 if __name__ == '__main__':
