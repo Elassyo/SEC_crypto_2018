@@ -4,7 +4,7 @@ import base64
 import random
 import re
 import urllib.parse
-from flask import Flask, request, session
+from flask import Flask, request, session, make_response
 from Crypto import Random
 from Crypto.Cipher import AES
 
@@ -95,7 +95,7 @@ def challenge12():
 
 
 @app.route('/challenge13/encrypt', methods=['POST'])
-def challenge13():
+def challenge13_encrypt():
     data = base64.b64decode(request.get_data())
 
     if 'ch13' not in session:
@@ -112,7 +112,6 @@ def challenge13():
     data = re.sub(br'[;=]', b'', data)
     cleartext = b'title=' + prefix + b';content=' + data + b';type=jibberjabber;'
     len_p = len(b'title=' + prefix + b';content=')
-    print(len_p, 16 - len_p % 16)
     padding = 16 - (len(cleartext) % 16)
     cleartext += bytes(padding for i in range(padding))
 
@@ -122,7 +121,7 @@ def challenge13():
 
 
 @app.route('/challenge13/decrypt', methods=['POST'])
-def challenge13_validate():
+def challenge13_decrypt():
     data = base64.b64decode(request.get_data())
 
     if 'ch13' not in session:
@@ -136,6 +135,66 @@ def challenge13_validate():
     print(cleartext)
 
     return b'OK' if b'admin=true' in cleartext.split(b';') else b'KO'
+
+
+@app.route('/challenge14/encrypt')
+def challenge14_encrypt():
+    if 'ch14' not in session:
+        secrets = [
+            b'000000Now that the party is jumping',
+            b"000001With the bass kicked in and the Vega's are pumpin'",
+            b'000002Quick to the point, to the point, no faking',
+            b"000003Cooking MC's like a pound of bacon",
+            b"000004Burning 'em, if you ain't quick and nimble",
+            b'000005I go crazy when I hear a cymbal',
+            b'000006And a high hat with a souped up tempo',
+            b"000007I'm on a roll, it's time to go solo",
+            b"000008ollin' in my five point oh",
+            b'000009ith my rag-top down so my hair can blow'
+        ]
+
+        session['ch14'] = {
+            'key': Random.new().read(16),
+            'iv': Random.new().read(16),
+            'secret': random.choice(secrets)
+        }
+
+    key = session['ch14']['key']
+    iv = session['ch14']['iv']
+    secret = session['ch14']['secret']
+
+    cleartext = secret
+    padding = 16 - (len(cleartext) % 16)
+    cleartext += bytes(padding for i in range(padding))
+
+    ciphertext = AES.new(key, AES.MODE_CBC, iv).encrypt(cleartext)
+
+    return base64.b64encode(iv) + b'\n' + base64.b64encode(ciphertext)
+
+
+@app.route('/challenge14/decrypt', methods=['POST'])
+def challenge14_decrypt():
+    data = request.get_data()
+    data = data.split(b'\n')
+
+    if len(data) != 2:
+        return b'KO'
+
+    iv = base64.b64decode(data[0])
+    ciphertext = base64.b64decode(data[1])
+
+    if 'ch14' not in session:
+        return b'KO'
+
+    key = session['ch14']['key']
+    print(session['ch14']['secret'])
+
+    cleartext = AES.new(key, AES.MODE_CBC, iv).decrypt(ciphertext)
+    padding = cleartext[-1]
+    if padding == 0 or not all(b == padding for b in cleartext[-padding:]):
+        return b'Bad padding', '500 Internal Server Error'
+
+    return b'OK'
 
 
 if __name__ == '__main__':
